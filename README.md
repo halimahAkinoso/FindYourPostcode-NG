@@ -42,7 +42,33 @@ If key missing, app automatically uses local high-accuracy fallback DB with conf
 4. Save delivery record: FastAPI + DB
 5. Vendor organize: filter, search, status update, one-click Google Maps + phone call
 
-## Deploy
-Backend: Render / Railway / Fly.io
-Frontend: Vercel
-DB: switch DATABASE_URL to Postgres in production.
+## Deploy to Render
+
+### Option 1: Render Blueprint (Automatic — Recommended)
+This repository contains a `render.yaml` blueprint that deploys both backend and frontend automatically:
+1. Go to [Render Dashboard](https://dashboard.render.com/) and click **New > Blueprint**.
+2. Connect your GitHub repository (`FindYourPostcode-NG`).
+3. Click **Apply**. Render will automatically configure both services:
+   - **findme-backend**: Python FastAPI Web Service (`uvicorn app.main:app --host 0.0.0.0 --port $PORT`)
+   - **findme-frontend**: React + Vite Static Site (`npm run build`, output `./dist`) with `VITE_API_URL` linked to the backend URL.
+
+### Option 2: Manual Setup on Render
+1. **Backend Web Service**:
+   - **Root Directory**: `backend`
+   - **Environment**: Python 3
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - **Environment Variables**:
+     - `PYTHON_VERSION`: `3.11.9`
+     - `DATABASE_URL`: `sqlite:///./findme.db` (or a Render PostgreSQL URL)
+     - `NIPOST_BASE`: `https://api.nipost.gov.ng`
+     - `NIPOST_API_KEY`: *(optional, enter key if available)*
+
+2. **Frontend Static Site**:
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm install && npm run build`
+   - **Publish Directory**: `dist`
+   - **Environment Variables**:
+     - `VITE_API_URL`: `https://<your-backend-service-name>.onrender.com`
+   - **Redirects/Rewrites**:
+     - Rule: `/*` -> `/index.html` (Rewrite)

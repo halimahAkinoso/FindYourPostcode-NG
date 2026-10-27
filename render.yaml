@@ -1,0 +1,37 @@
+services:
+  # Backend Web Service (FastAPI)
+  - type: web
+    name: findme-backend
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: DATABASE_URL
+        value: sqlite:///./findme.db
+      - key: NIPOST_BASE
+        value: https://api.nipost.gov.ng
+
+  # Frontend Static Site (React + Vite)
+  - type: web
+    name: findme-frontend
+    runtime: static
+    region: oregon
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: findme-backend
+          envVarKey: RENDER_EXTERNAL_URL
